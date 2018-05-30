@@ -31,3 +31,17 @@ ACL 2016 Kun Xu
 
 ACL 2014
 
+- Question Graph
+  - 基于依存关系：question word（疑问词）, question focus（问题类别）, question verb（句子核心动词）, question topic；
+  - 将依存关系转化为genereic question graph：标注问题特征和命名实体，将介词、限定词和标点符号去掉——问题特征图；
+  - 提取特征：对每个边e(s,t)，提取：s, t, s|t, s|e|t
+- Freebase Topic Graph
+  - Topic Graph: 选择topic结点K阶邻域的节点
+  - 用结点的关系和property作为特征
+  - Alignment model：将自然语言问题映射到知识库的关系，P(relation|question)
+  - 将问题特征和topic结点特征组合
+- 关系映射：将自然语言问题映射到知识库的关系
+  - 朴素贝叶斯：$P(R|Q)=\prod_w P(w|R)P(R)$
+  - 将关系分解为“子关系”（Freebase中用点分割）:$P_{backoff}(R|Q)=\prod_r\prod_w P(w|r)P(r)$
+- Co-occurrence Matrix：用于计算概率
+
