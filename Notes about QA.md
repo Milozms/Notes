@@ -45,3 +45,28 @@ ACL 2014
   - 将关系分解为“子关系”（Freebase中用点分割）:$P_{backoff}(R|Q)=\prod_r\prod_w P(w|r)P(r)$
 - Co-occurrence Matrix：用于计算概率
 
+
+
+## Improved Neural Relation Detection for Knowledge Base Question Answering 
+
+ACL 2017
+
+通常的关系识别（general relaiton detection，在IE中常被叫做关系提取/关系分类）和用于KBQA的关系识别之间存在明显的gap：
+
+- 通常的关系识别只有有限的关系数（一般小于100），而KB中的关系数上千；
+- 在KBQA中，测试数据中经常有训练集中从未出现过的关系；
+- 在KBQA中经常需要识别一系列的关系，而不是一个关系。
+
+KB关系的表示（表示不同级别的抽象）：
+
+- Relation-level：表示为单个token；
+- Word-level：拆成一系列单词，看做单词序列：用于应对测试数据中出现训练数据中未出现的关系这种情况；
+- 用两个BiLSTM（共享参数的）分别得到Relation-level和Word-level的hidden representation，加max-pooling得到关系的向量表示
+- 用word sequence的LSTM的final state作为relation sequence的initial state，作为对未见过的关系的弥补
+
+用深度BiLSTM做问题表示：
+
+- relation name与长短语匹配，relation word与较短的短语匹配，因此需要问题的向量表示能够总结不同长度的短语信息
+
+残差网络：把前面的层和后面的层连起来，防止梯度消失
+
