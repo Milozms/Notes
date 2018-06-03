@@ -70,7 +70,7 @@ KB关系的表示（表示不同级别的抽象）：
 
 残差网络：把前面的层和后面的层连起来，防止梯度消失
 
-
+LSTM
 
 ## Large-Scale QA-SRL Parsing 
 
