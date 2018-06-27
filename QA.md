@@ -1,4 +1,4 @@
-# Notes about QA
+#  Notes about QA
 
 ## Answering Natural Language Questions via Phrasal Semantic Parsing 
 
@@ -67,7 +67,48 @@ KB关系的表示（表示不同级别的抽象）：
 用深度BiLSTM做问题表示：
 
 - relation name与长短语匹配，relation word与较短的短语匹配，因此需要问题的向量表示能够总结不同长度的短语信息
+- 第一层输入word embedding，第二层输入第一层的输出，每一层网络都可能与不同级别的关系表示相匹配，两层网络的表示互补
+- 残差网络：把前面的层和后面的层连起来，防止梯度消失
+- 将两层的输出向量相加，过max-pooling；或先分别过max-pooling再相加
+- hierarchical training使得第二层fit第一次的残差
+- ranking loss to maximizing the margin 
 
-残差网络：把前面的层和后面的层连起来，防止梯度消失
+KBQA
 
-LSTM
+- entity re-ranking：用LSTM关系提取模型选出top-l个关系，用这top-l的关系的得分与entity linker的得分结合
+- 数据：https://github.com/Gorov/KBQA_RE_data
+
+
+
+## CFO: Conditional Focused Neural Question Answering with Large-scale Knowledge Bases 
+
+ACL 2016 (Lei Li)
+
+Conditional Factoid Factorization: $p(s,r|q)=p(r|q)\cdot p(s|q,r)$
+
+知识库中的关系数量比实体少，所以先找关系后找实体
+
+- $p_{\theta_r}(r|q) = softmax(f(q)^T E(r))$
+  - f(q)：question embedding: 2-layer BiGRU final hidden state + linear lear
+  - E(r)：embedding（随机初始化）
+- $p_{\theta_s}(s|q,r) = softmax(g(q)^T E(s) + \alpha h(r,s))$
+  - g(q)：question embedding
+  - h(r,s)：关系-实体 得分（相连为1，否则为0）
+  - E(s)：TransE，或type vector（固定的，使用类别信息，1-hot，这种情况下要给g(q)加sigmoid）
+  - 实验结果表明TransE pretrain效果不如type vector
+- Focused Pruning 
+  - 给定知识库K和问题q，输出一个较小的subject/relation子集
+  - N-gram pruning：问题中一定会出现实体的子串（问题：non-subject-mention noise）
+  - 用sequence labeling network（双层BiGRU+GRU）：p(w|q) 表示n-gram w是q的subject mention的概率
+
+
+
+## Semantic Parsing on Freebase from Question-Answer Pairs 
+
+EMNLP 2013 Jonathan Berant , Andrew Chou, Roy Frostig, Percy Liang 
+
+挑战：将自然语言短语映射到logical predicate
+
+Aligning：根据句子中的短语找到对应的谓词（coarse）
+
+Bridging：根据相邻的谓词生成谓词，而不是根据words

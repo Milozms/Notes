@@ -130,3 +130,38 @@ $$
 
 ## 3 半监督方法
 
+
+
+
+
+
+
+## Position-aware Attention and Supervised Data Improve Slot Filling 
+
+EMNLP 17
+
+用向量表示不同位置，加attention，将position embedding作为attention的query
+
+
+
+## Neural Relation Extraction with Selective Attention over Instances 
+
+PCNN+ATT
+
+ACL16
+
+用多个instance之间的sentence-level attention，减少有噪声的样例的权重，从而减少训练数据中的噪声的影响。
+
+对于每个entity pair：(head, tail)，集合S包括了n个句子：x1, x2, ..., xn。为了预测关系r，用一个向量s表示整个集合S：s为表示x1, x2, ..., xn的向量的加权和，权重计算：xi的向量表示 * 对角权重矩阵A * 要预测的关系r的向量表示，再过softmax。得到的s过线性层，再过softmax层，得到预测关系的概率分布。
+
+对于每对实体，把他们出现的所有instance放到一起预测。
+
+
+
+HypeNet: Improving Hypernymy Detection with an Integrated Path-based and Distributional Method, Vered Shwartz, Yoav Goldberg, Ido Dagan. (<https://arxiv.org/pdf/1603.06076>)
+
+SDP-LSTM: Classifying relations via long short term memory networks along shortest dependency path, Xu Yan, Lili Mou, Ge Li, Yunchuan Chen, Hao Peng, and Zhi Jin. 2015. (<http://www.aclweb.org/anthology/D15-1206>)
+
+CNN-PE: CNN with input word embedding + position embedding
+
+BGRU+2ATT: Bidirectional GRU +word-level attention + sentence-level attention from Neural Relation Extraction with Selective Attention over Instances (<http://www.aclweb.org/anthology/P16-1200>)
