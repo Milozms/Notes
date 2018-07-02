@@ -156,12 +156,79 @@ ACL16
 
 对于每对实体，把他们出现的所有instance放到一起预测。
 
+（一对实体只有一个标签吗？公式11中的ri指的是哪个？）
+
+## Improving Hypernymy Detection with an Integrated Path-based and Distributional Method 
+
+ACL16
+
+HypeNet
+
+hypernymy relation：上位关系（从属关系？）
 
 
-HypeNet: Improving Hypernymy Detection with an Integrated Path-based and Distributional Method, Vered Shwartz, Yoav Goldberg, Ido Dagan. (<https://arxiv.org/pdf/1603.06076>)
 
-SDP-LSTM: Classifying relations via long short term memory networks along shortest dependency path, Xu Yan, Lili Mou, Ge Li, Yunchuan Chen, Hao Peng, and Zhi Jin. 2015. (<http://www.aclweb.org/anthology/D15-1206>)
+## CoType
 
-CNN-PE: CNN with input word embedding + position embedding
+#### 1. 候选生成（生成训练数据）
 
-BGRU+2ATT: Bidirectional GRU +word-level attention + sentence-level attention from Neural Relation Extraction with Selective Attention over Instances (<http://www.aclweb.org/anthology/P16-1200>)
+###### Domain-agnostic实体识别：Distantly-supervised文本切分
+
+- DIstant supervision只标注了一小部分entity mention，如果用序列标注模型训练，会产生大量false negative
+- 对切分质量建模的方法：短语质量+POS模式质量，用数据集中的正样例估计切分质量
+- 1.从数据集中找到高频的连续的pattern（词序列和POS序列）
+- 2.提取corpus-level concordance和句子级句法信号特征，训练两个随机森林分类器
+- 3.用估计出来的质量分数寻找最好的切分：最大化joint segmentation quality
+- 4.用切分的语料计算rectified特征，重复上述两步直到收敛
+
+
+
+#### 问题
+
+- 公式1？
+- rectified？
+- random forest在哪实现的？
+
+
+
+### HypeNet
+
+Improving Hypernymy Detection with an Integrated Path-based and Distributional Method, Vered Shwartz, Yoav Goldberg, Ido Dagan. (<https://arxiv.org/pdf/1603.06076>)
+
+### SDP-LSTM
+
+Classifying relations via long short term memory networks along shortest dependency path, Xu Yan, Lili Mou, Ge Li, Yunchuan Chen, Hao Peng, and Zhi Jin. 2015. (<http://www.aclweb.org/anthology/D15-1206>)
+
+- 先用stanford parser得到依存树，从依存树中提取最短依存路径（SDP）作为网络的输入。
+- SDP中的四类信息（words, POS tags, grammatical relations, WordNet hypernyms ）构成四个channel。每个channel输入embedding向量
+- SDP分位左半段和右半段，由公共祖先结点分割，左右半段分别输入两个LSTM，输出过max-pooling，然后连接
+- 四个channel的输出向量连接到一起，在过一个hidden layer+softmax，用于分类
+
+### CNN-PE
+
+CNN with input word embedding + position embedding
+
+### BGRU+2ATT
+
+Bidirectional GRU +word-level attention + sentence-level attention from Neural Relation Extraction with Selective Attention over Instances (<http://www.aclweb.org/anthology/P16-1200>)
+
+#### data_preprocess.py
+
+将TACRED数据集从json格式转化成行格式
+
+#### initial.py：
+
+- Init: 将数据集中的样例以entity pair作为key构建dict；然后按顺序，将entity pair相同的样例放到一起，entity pair相同的集合内部把label相同的放到一起。train_sen中每个元素为给定entity pair和label的所有句子，train_ans为相应的label。（entity pair和label都相同的记为一组）
+- Separate: 将word embedding和position embedding分开，便于placeholder输入
+
+#### train_GRU.py
+
+- 将训练数据分为若干batch，每个batch的size为big_num（设定的参数），将batch输入train_step
+- Train_step：将相同entity pair和label的样例（组）拆分为单个的样例，用total_shape记录每组的句子数（按顺序）
+
+#### network.py
+
+在计算sentence-level attention时，把同组（entity pair和label都相同）的样例放在一起计算，（batch_size是组size），每个组给出一个预测。
+
+
+
