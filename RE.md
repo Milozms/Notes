@@ -204,6 +204,18 @@ Classifying relations via long short term memory networks along shortest depende
 - SDP分位左半段和右半段，由公共祖先结点分割，左右半段分别输入两个LSTM，输出过max-pooling，然后连接
 - 四个channel的输出向量连接到一起，在过一个hidden layer+softmax，用于分类
 
+#### sprnn_model.py
+
+max_over_time(inputs, index, seq_lens)：返回batch中第index个instance的max-pooling
+
+原论文中用的max-pooling，但此代码可以在pooling和attention中二选一
+
+#### train.py
+
+第40行import sprnn_model
+
+
+
 ### CNN-PE
 
 CNN with input word embedding + position embedding
@@ -219,16 +231,32 @@ Bidirectional GRU +word-level attention + sentence-level attention from Neural R
 #### initial.py：
 
 - Init: 将数据集中的样例以entity pair作为key构建dict；然后按顺序，将entity pair相同的样例放到一起，entity pair相同的集合内部把label相同的放到一起。train_sen中每个元素为给定entity pair和label的所有句子，train_ans为相应的label。（entity pair和label都相同的记为一组）
+
+```python
+train_sen = {}  # {entity pair:[[[label1-sentence 1],[label1-sentence 2]...],[[label2-sentence 1],[label2-sentence 2]...]}
+train_ans = {}  # {entity pair:[label1,label2,...]} the label is one-hot vector
+test_sen = {}  # {entity pair:[[sentence 1],[sentence 2]...]}
+test_ans = {}  # {entity pair:[labels,...]} the labels is N-hot vector (N is the number of multi-label)
+```
+
+- organizing train data: 将train_sen中每个组（entity pair和label都相同）中的所有instance的集合作为一个train_x和train_y中的一个元素（**也就是train_x[idx]是一个组中的所有样例**）
+
 - Separate: 将word embedding和position embedding分开，便于placeholder输入
 
 #### train_GRU.py
 
-- 将训练数据分为若干batch，每个batch的size为big_num（设定的参数），将batch输入train_step
-- Train_step：将相同entity pair和label的样例（组）拆分为单个的样例，用total_shape记录每组的句子数（按顺序）
+- 131-150行：将训练数据分为若干batch，每个batch的size为big_num（设定的参数），将batch输入train_step
+- train_step中的输入是一个batch，batch中的每个单元都是一个组中的所有样例
+- Train_step：89-94行：将相同entity pair和label的样例（组）拆分为单个的样例
+- 用total_shape记录每组的句子数（按顺序）
+- 输入到sess.run中的total_word、total_pos是拆散后的（多个）组（**total_word[idx]是一个单独的样例**）
 
 #### network.py
 
 在计算sentence-level attention时，把同组（entity pair和label都相同）的样例放在一起计算，（batch_size是组size），每个组给出一个预测。
+
+- sentence-level attention之前都是单个样例的计算
+- 115行：sen_repre中的每个元素是一个组中的全部样例
 
 
 
