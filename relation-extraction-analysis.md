@@ -34,7 +34,7 @@ hypernymy relation：上位关系（从属关系？）
 
 ## CoType
 
-#### 1. 候选生成（生成训练数据）
+#### 候选生成（生成训练数据）
 
 ######  Domain-agnostic实体识别：Distantly-supervised文本切分
 
@@ -44,6 +44,32 @@ hypernymy relation：上位关系（从属关系？）
 - 2.提取corpus-level concordance和句子级句法信号特征，训练两个随机森林分类器
 - 3.用估计出来的质量分数寻找最好的切分：最大化joint segmentation quality
 - 4.用切分的语料计算rectified特征，重复上述两步直到收敛
+- 实际代码里用的是stanford NER
+
+###### 生成relation mention
+
+- 对每一对句子s中的实体mention $(m_a, m_b)$ ，生成两个relation mention $z_1 = (m_a, m_b, s)$和$z_2 = (m_b, m_a, s)$
+- 抽样30%的unlinkable entity mention作为负样例
+
+#### Joint entity and relation embedding
+
+- 关系向量空间
+- 实体向量空间
+
+##### 1.对relation mention的type建模：
+
+- 假设1：mention-feature co-occurrence：在语料中共享多个文本特征的两个relation mention倾向于有相似的relation type（在embedding space中接近）
+- Second-order proximity：有相似的neighbor的object之间也相似
+- 用LINE中的二阶近似度对relation mention和feature之间的关系建模 $p(f_j|z_i)$ ，$f_j$是特征，$z_j$是relation mention
+- 最小化目标：$L_{ZF}=-\sum_{z_i} \sum_{f_j} w_{ij}\log p(f_j|z_i)$，其中$w_{ij}$是co-occurrence frequency
+  - 为了更高效的计算，避免在所有的特征上做加法，使用负采样：
+  - 对每个$(z_i,f_j)​$，根据噪声分布（？）sample多个false feature
+  - 将上式中的$\log p(f_j|z_i)$替换为：$\log\sigma(z_i^T c_j)$ + 负样例
+  - 已有的embedding方法往往基于local consistent assumption，但relation mention和relation label之间的关系可能是"false" association
+- 假设2：partial-label association：relation mention的embedding向量应该与和它最相关的candidate type相似
+- 公式4：最大化$z_i$与相关的r的相似度（点乘），同时最小化$z_i$与不相关的r'的相似度。将公式4加入最终的
+
+##### 2.对entity mention的type建模
 
 
 
@@ -54,6 +80,22 @@ hypernymy relation：上位关系（从属关系？）
 - random forest在哪实现的？
 
 
+
+## LINE 
+
+- 一阶近似度：边权重
+- 二阶近似度：结点与其他节点之间的一阶近似度构成的向量，向量之间的相似度
+
+#### 一阶
+
+- 概率分布$$p_1(i,j) = \frac{1}{1+\exp(-u_i^T u_j)}$$,  $\hat{p}_1(i,j)=\frac{w_ij}{W}$, $W=\sum_{(i,j)\in E} w_{ij}$
+- 最小化两个概率分布之间的距离（KL散度）：$O_1=-\sum_{(i,j)\in E} w_{ij}\log p_1(i,j)$
+
+#### 二阶
+
+- $p_2(v_j|v_i)=\frac{\exp(u_j^T u_i)}{\sum_{k=1}^{|V|}\exp(u_k^T u_i)}$
+- $\hat{p}_2(v_j|v_i)=\frac{w_ij}{d_i}$, $d_i=\sum_{k\in N(i)} w_{ik}$
+- $O_2=-\sum_{(i,j)\in E} w_{ij}\log p_2(v_j|v_i)$
 
 ### HypeNet
 
